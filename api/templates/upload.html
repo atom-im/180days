@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统计连续居住在中国内地的天数</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+  	    color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #333;
+        }
+        p {
+            line-height: 1.6;
+        }
+        .upload-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+        .upload-section input[type="file"] {
+            margin-bottom: 10px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .flash-message {
+            color: red;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>统计连续居住在中国内地的天数</h1>
+        <h2>快速了解自己是否在连续六个月以上不在香港，从而更好地准备申请核实香港永久性居民身份证的相关材料。</h2>
+        <p>申请核实永久性居民身份证资格时，申请人需要主动申报在香港通常居住期间是否有连续六个月以上不在香港的情况。本网站根据您的中国内地出入境记录，自动计算每次入境中国内地后连续居住在中国内地的天数。对于大部分主要在香港和内地之间往返的申请人来说，可以通过这个天数间接判断自己是否有连续六个月不在香港。</p>
+        <p>如果您的出入境记录显示在中国内地连续居住超过六个月，那么这段时间您一定不在香港，需要在申请香港永居时进行声明和解释。</p>
+        <p><strong>注意：</strong>此结果并不能完整反映申请人全部不在香港的时间，当你生活在中国内地和香港以外的其它国家和地区时，需要通过其他途径获取这部分记录。如果想获取确切的出入境香港的记录，请自行前往入境事务处网站
+<a href="https://www.immd.gov.hk/hks/services/statement-of-travel-records.html" target="_blank">申请出入境纪录证明</a>（160港币）。</p>
+
+        <div class="upload-section">
+            <h2>上传出入境记录</h2>
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="flash-message">
+                  {% for message in messages %}
+                    {{ message }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+            <form method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept="application/pdf">
+                <input type="submit" value="上传" class="btn">
+            </form>
+        </div>
+
+        <h2>使用说明</h2>
+        <ol>
+            <li>自行前往国家移民管理局出入境记录查询系统下载本人出入境记录（PDF）。请参考国家移民管理局的微信公众号文章：<a href="https://mp.weixin.qq.com/s/0RSgJJ-YX9uUhjBxzBSM1w" target="_blank">点击这里</a>。</li>
+            <li>在本网页上传您的出入境记录文件。</li>
+            <li>天数计算方式为每次从中国内地出境的日期减去对应的前一次入境日期。如果您当前身在内地，则会用当前日期来计算最后一次入境内地后居住在中国的天数。</li>
+            <li>查询结果会直接显示在网页上，包括入境日期、出境日期和连续居住在中国内地的天数。超过180天的天数会用红色标示。</li>
+        </ol>
+
+        <h3>隐私声明</h3>
+        <ol>
+            <li>本网站承诺不保存用户上传的文件和处理结果，处理完后会立即删除上传的文件。</li>
+            <li>在上传文件前，建议您自行使用PDF软件涂黑或擦除文件内个人隐私数据。</li>
+            <li>网站开放<a href="https://github.com/atom-im/180days" target="_blank">源代码</a>，您可以自行部署使用。</li>
+        </ol>
+
+    </div>
+</body>
+</html>
