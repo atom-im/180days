@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>统计连续居住在中国内地的天数</title>
+    <title>速查连续六个月以上不在香港日期</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -23,6 +23,11 @@
         margin-bottom: 20px;
       }
       h2 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      h3 {
         color: #333;
         text-align: center;
         margin-bottom: 20px;
@@ -64,8 +69,8 @@
   </head>
   <body>
     <div class="container">
-      <h1>连续居住在中国内地的天数</h1>
-      <h2>单次连续离港天数。单次离港超过180天的天数以红色标示。</h2>
+      <h1>速查连续六个月以上不在香港日期</h1>
+      <h2>统计单次连续离港天数。单次离港超过180天的以红色标示。</h2>
       {{ results|safe }}
       <a href="/">重新上传其它文件</a>
     </div>

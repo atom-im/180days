@@ -53,7 +53,7 @@ def extract_tables_from_pdf(pdf_path):
     combined_df = pd.DataFrame(all_rows, columns=columns)
     return combined_df
 
-def calculate_days_in_china(df):
+def calculate_days_in_mainland(df):
     df['出入境日期'] = pd.to_datetime(df['出入境日期']).dt.date
     current_date = datetime.now().date()
     results = []
@@ -64,40 +64,87 @@ def calculate_days_in_china(df):
             if i+1 <= len(df):
                 entry_date = df.iloc[i]['出入境日期']
                 exit_date = df.iloc[i-1]['出入境日期']
-                days_in_china = (exit_date - entry_date).days
-                results.append([entry_date, exit_date, days_in_china])
+                days_in_mainland = (exit_date - entry_date).days
+                results.append([entry_date, exit_date, days_in_mainland])
     else:
         entry_date = first_record['出入境日期']
-        days_in_china = (current_date - entry_date).days
-        results.append([entry_date, current_date, days_in_china])
+        days_in_mainland = (current_date - entry_date).days
+        results.append([entry_date, current_date, days_in_mainland])
 
         for i in range(2, len(df), 2):
             if i < len(df):
                 entry_date = df.iloc[i]['出入境日期']
                 exit_date = df.iloc[i-1]['出入境日期']
-                days_in_china = (exit_date - entry_date).days
-                results.append([entry_date, exit_date, days_in_china])
+                days_in_mainland = (exit_date - entry_date).days
+                results.append([entry_date, exit_date, days_in_mainland])
 
-    results_df = pd.DataFrame(results, columns=['Entry Date', 'Exit Date', 'Days in China'])
-    results_df = results_df.sort_values(by='Days in China', ascending=False).reset_index(drop=True)
+    results_df = pd.DataFrame(results, columns=['Entry Date', 'Exit Date', 'Days in mainland'])
+    results_df = results_df.sort_values(by='Days in mainland', ascending=False).reset_index(drop=True)
     return results_df
 
-def highlight_days_in_china(days):
-    """Highlight days in China if greater than 180."""
-    if days > 180:
+def calculate_days_abroad(df):
+    df['出入境日期'] = pd.to_datetime(df['出入境日期']).dt.date
+    current_date = datetime.now().date()
+    results = []
+    total_days_abroad = 0
+
+    first_record = df.iloc[0]
+    if first_record['出境/入境'] == '出境':
+        entry_date = current_date
+        exit_date = df.iloc[0]['出入境日期']
+        days_abroad = (entry_date - exit_date).days + 1
+        total_days_abroad += days_abroad
+        results.append([exit_date, entry_date, days_abroad])
+
+        for i in range(1, len(df), 2):
+            if i + 1 < len(df):
+                entry_date = df.iloc[i]['出入境日期']
+                exit_date = df.iloc[i + 1]['出入境日期']
+                days_abroad = (entry_date - exit_date).days + 1
+                total_days_abroad += days_abroad
+                results.append([exit_date, entry_date, days_abroad])
+    else:
+        for i in range(0, len(df), 2):
+            if i + 1 < len(df):
+                entry_date = df.iloc[i]['出入境日期']
+                exit_date = df.iloc[i + 1]['出入境日期']
+                days_abroad = (entry_date - exit_date).days + 1
+                total_days_abroad += days_abroad
+                results.append([exit_date, entry_date, days_abroad])
+
+    results_df = pd.DataFrame(results, columns=['Exit Date', 'Entry Date', 'Days Abroad'])
+    results_df = results_df.sort_values(by='Exit Date', ascending=False).reset_index(drop=True)
+    return results_df, total_days_abroad
+
+def highlight_days(days, threshold=180):
+    """Highlight days if greater than threshold."""
+    if days > threshold:
         return f'<span style="color: red;">{days}</span>'
     return str(days)
 
-def results_to_html(results_df):
+def results_to_html(results_df_mainland, results_df_abroad, total_days_abroad):
     """Convert results DataFrame to HTML with highlighted days."""
-    html = '<table border="1">'
+    html = '<h2>在中国内地居住的天数</h2>'
+    html += '<table border="1">'
     html += '<tr><th>入境日期</th><th>出境日期</th><th>居住天数</th></tr>'
-    for _, row in results_df.iterrows():
+    for _, row in results_df_mainland.iterrows():
         entry_date = row['Entry Date']
         exit_date = row['Exit Date']
-        days_in_china = highlight_days_in_china(row['Days in China'])
-        html += f'<tr><td>{entry_date}</td><td>{exit_date}</td><td>{days_in_china}</td></tr>'
+        days_in_mainland = highlight_days(row['Days in mainland'])
+        html += f'<tr><td>{entry_date}</td><td>{exit_date}</td><td>{days_in_mainland}</td></tr>'
     html += '</table>'
+
+    html += '<h2>在香港（和境外其它地区）居住的天数</h2>'
+    html += '<table border="1">'
+    html += '<tr><th>出境日期</th><th>入境日期</th><th>居住天数</th></tr>'
+    for _, row in results_df_abroad.iterrows():
+        exit_date = row['Exit Date']
+        entry_date = row['Entry Date']
+        days_abroad = highlight_days(row['Days Abroad'], threshold=2557)
+        html += f'<tr><td>{exit_date}</td><td>{entry_date}</td><td>{days_abroad}</td></tr>'
+    html += '</table>'
+
+    html += f'<h3>在境外居住的总天数: {total_days_abroad}</h3>'
     return html
 
 @app.route('/', methods=['GET', 'POST'])
@@ -115,8 +162,9 @@ def upload_file():
             file.save(file_path)
             try:
                 df = extract_tables_from_pdf(file_path)
-                results_df = calculate_days_in_china(df)
-                results_html = results_to_html(results_df)
+                results_df_mainland = calculate_days_in_mainland(df)
+                results_df_abroad, total_days_abroad = calculate_days_abroad(df)
+                results_html = results_to_html(results_df_mainland, results_df_abroad, total_days_abroad)
             except ValueError as e:
                 flash(str(e))
                 return redirect(request.url)
