@@ -88,29 +88,30 @@ def calculate_days_abroad(df):
     results = []
     total_days_abroad = 0
 
-    first_record = df.iloc[0]
-    if first_record['出境/入境'] == '出境':
-        entry_date = current_date
+    # Determine if the first record is an exit
+    is_first_exit = df.iloc[0]['出境/入境'] == '出境'
+
+    # Handle the case where the first record is an exit
+    if is_first_exit:
         exit_date = df.iloc[0]['出入境日期']
+        entry_date = current_date
         days_abroad = (entry_date - exit_date).days + 1
+        if len(df) > 1 and df.iloc[1]['出入境日期'] == exit_date:
+            days_abroad -= 1
         total_days_abroad += days_abroad
         results.append([exit_date, entry_date, days_abroad])
 
-        for i in range(1, len(df), 2):
-            if i + 1 < len(df):
-                entry_date = df.iloc[i]['出入境日期']
-                exit_date = df.iloc[i + 1]['出入境日期']
-                days_abroad = (entry_date - exit_date).days + 1
-                total_days_abroad += days_abroad
-                results.append([exit_date, entry_date, days_abroad])
-    else:
-        for i in range(0, len(df), 2):
-            if i + 1 < len(df):
-                entry_date = df.iloc[i]['出入境日期']
-                exit_date = df.iloc[i + 1]['出入境日期']
-                days_abroad = (entry_date - exit_date).days + 1
-                total_days_abroad += days_abroad
-                results.append([exit_date, entry_date, days_abroad])
+    # Process the rest of the records
+    start_index = 1 if is_first_exit else 0
+    for i in range(start_index, len(df), 2):
+        if i + 1 < len(df):
+            entry_date = df.iloc[i]['出入境日期']
+            exit_date = df.iloc[i + 1]['出入境日期']
+            days_abroad = (entry_date - exit_date).days + 1
+            if i + 2 < len(df) and df.iloc[i + 2]['出入境日期'] == exit_date:
+                days_abroad -= 1
+            total_days_abroad += days_abroad
+            results.append([exit_date, entry_date, days_abroad])
 
     results_df = pd.DataFrame(results, columns=['Exit Date', 'Entry Date', 'Days Abroad'])
     results_df = results_df.sort_values(by='Exit Date', ascending=False).reset_index(drop=True)
